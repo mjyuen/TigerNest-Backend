@@ -11,6 +11,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:p@localhost:5432/tigernest"
+#app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://localhost/tigernest"
 
 
 db = SQLAlchemy(app)
@@ -138,7 +139,7 @@ class Host(db.Model):
 	netid = db.Column(db.Unicode, unique = True)
 	name = db.Column(db.Unicode, unique = False)
 	email = db.Column(db.Unicode, unique = False)
-	campus_organizations = db.Column(db.JSON, unique = False)
+	campus_organizations = db.Column(db.Unicode, unique = False)
 	hosting_address = db.Column(db.Unicode, unique = False)
 	max_visitors = db.Column(db.Integer, unique = False)
 	gender = db.Column(db.Unicode, unique = False)
