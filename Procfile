@@ -1,1 +1,1 @@
-web: python database.py
+web: python3 database.py

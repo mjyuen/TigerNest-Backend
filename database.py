@@ -18,23 +18,33 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
 #------------------------------------------------------------------------------------------
+
+@app.route("/getRegCode", methods = ["GET"])
+def get_code():
+	result = {"regCode": "2sdi319230d8208sd"}
+	return jsonify(result)
+
 class EventOrganizer(db.Model):
 	event_organizer_id = db.Column(db.Integer, primary_key = True)
 	netid = db.Column(db.Unicode, unique = True)
-	name = db.Column(db.Unicode, unique = False)
+	firstname = db.Column(db.Unicode, unique = False)
+	lastname = db.Column(db.Unicode, unique = False)
 	email = db.Column(db.Unicode, unique = False)
+	password = db.Column(db.Unicode, unique = False)
 	campus_organizations = db.Column(db.JSON, unique = False)
 
-	def __init__(self, netid, name, email, campus_organizations):
+	def __init__(self, netid, firstname, lastname, email, password, campus_organizations):
 		self.netid = netid
-		self.name = name
+		self.firstname = firstname
+		self.lastname = lastname
 		self.email = email
+		self.password = password
 		self.campus_organizations = campus_organizations
 
 
 class EventOrganizerSchema(ma.Schema):
 	class Meta:
-		fields = ('event_organizer_id', 'netid', 'name', 'email', 'campus_organizations')
+		fields = ('event_organizer_id', 'netid', 'firstname', 'lastname', 'email', 'password', 'campus_organizations')
 
 event_organizer_schema = EventOrganizerSchema()
 event_organizers_schema = EventOrganizerSchema(many = True)
@@ -43,11 +53,13 @@ event_organizers_schema = EventOrganizerSchema(many = True)
 @app.route("/event_organizer", methods=["POST"])
 def event_organizer_add():
 	netid = request.json['netid']
-	name = request.json['name']
+	firstname = request.json['firstname']
+	lastname = request.json['lastname']
 	email = request.json['email']
+	password = request.json['password']
 	campus_organizations = request.json['campus_organizations']
 
-	new_event_organizer = EventOrganizer(netid, name, email, campus_organizations)
+	new_event_organizer = EventOrganizer(netid, firstname, lastname, email, password, campus_organizations)
 	db.session.add(new_event_organizer)
 	db.session.commit()
 	return event_organizer_schema.jsonify(new_event_organizer)
@@ -56,6 +68,11 @@ def event_organizer_add():
 @app.route("/event_organizer/<event_organizer_id>", methods=["GET"])
 def event_organizer_get(event_organizer_id):
 	event_organizer = EventOrganizer.query.get(event_organizer_id)
+	return event_organizer_schema.jsonify(event_organizer)
+
+@app.route("/event_organizer/email/<email>", methods=["GET"])
+def event_organizer_get_email(email):
+	event_organizer = EventOrganizer.query.filter_by(email=email).first()
 	return event_organizer_schema.jsonify(event_organizer)
 
 #------------------------------------------------------------------------------------------
@@ -68,18 +85,17 @@ class Event(db.Model):
 	end_time = db.Column(db.Unicode, unique = False)
 	description = db.Column(db.Unicode, unique = False)
 	location = db.Column(db.Unicode, unique = False)
-	time = db.Column(db.Unicode, unique = False)
 	expected_number_visitors = db.Column(db.Integer, unique = False)
 	number_of_hosts = db.Column(db.Integer, unique = False)
 	hosts = db.Column(db.JSON, unique = False)
 	hosting_organization = db.Column(db.Unicode, unique=False)
+	organizer_id = db.Column(db.Unicode, unique=False)
 
-	def __init__(self, name, start_date, end_date, location, time, expected_number_visitors, number_of_hosts, hosts, start_time, end_time, description, hosting_organization):
+	def __init__(self, name, start_date, end_date, location, expected_number_visitors, number_of_hosts, hosts, start_time, end_time, description, hosting_organization, organizer_id):
 		self.name = name
 		self.start_date = start_date
 		self.end_date = end_date
 		self.location = location
-		self.time = time
 		self.expected_number_visitors = expected_number_visitors
 		self.number_of_hosts = number_of_hosts
 		self.hosts = hosts
@@ -87,10 +103,11 @@ class Event(db.Model):
 		self.end_time = end_time
 		self.description = description
 		self.hosting_organization = hosting_organization
+		self.organizer_id = organizer_id
 
 class EventSchema(ma.Schema):
 	class Meta:
-		fields = ('event_id', 'name', 'start_date', 'end_date', 'location', 'time', 'expected_number_visitors', 'number_of_hosts', 'hosts', 'start_time', 'end_time', 'description', 'hosting_organization')
+		fields = ('event_id', 'name', 'start_date', 'end_date', 'location', 'expected_number_visitors', 'number_of_hosts', 'hosts', 'start_time', 'end_time', 'description', 'hosting_organization', 'organizer_id')
 
 event_schema = EventSchema()
 events_schema = EventSchema(many = True)
@@ -101,7 +118,6 @@ def event_add():
 	start_date = request.json['start_date']
 	end_date = request.json['end_date']
 	location = request.json['location']
-	time = request.json['time']
 	expected_number_visitors = request.json['expected_number_visitors']
 	number_of_hosts = request.json['number_of_hosts']
 	hosts = request.json['hosts']
@@ -109,8 +125,9 @@ def event_add():
 	end_time = request.json['end_time']
 	description = request.json['description']
 	hosting_organization = request.json['hosting_organization']
+	organizer_id = request.json['organizer_id']
 
-	new_event = Event(name, start_date, end_date, location, time, expected_number_visitors, number_of_hosts, hosts, start_time, end_time, description, hosting_organization)
+	new_event = Event(name, start_date, end_date, location, expected_number_visitors, number_of_hosts, hosts, start_time, end_time, description, hosting_organization, organizer_id)
 	db.session.add(new_event)
 	db.session.commit()
 	return event_schema.jsonify(new_event)
@@ -183,7 +200,7 @@ def host_add():
 
 	db.session.add(new_host)
 	db.session.commit()
-	return event_schema.jsonify(new_host)
+	return host_schema.jsonify(new_host)
 
 @app.route("/host/<host_id>", methods=["GET"])
 def host_get(host_id):
