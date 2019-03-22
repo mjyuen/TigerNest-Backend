@@ -14,6 +14,7 @@ app = Flask(__name__)
 CORS(app)
 #app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:p@localhost:5432/tigernest"
 #app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://localhost/tigernest"
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 
 heroku = Heroku(app)
 db = SQLAlchemy(app)
