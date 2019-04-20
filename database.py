@@ -2,15 +2,31 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
 import os
 import hashlib
 import json
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+import time
+import jwt
 
 from flask_heroku import Heroku
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
+
+# Setup the Flask-JWT-Extended extension
+app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 60 * 60 * 24 # expire after 1 day
+jwt_flask = JWTManager(app)
+
+bcrypt = Bcrypt(app)
 CORS(app)
 #app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:p@localhost:5432/tigernest"
 #app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://localhost/tigernest"
@@ -344,26 +360,37 @@ def pairing_delete(pairing_id):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------
 class Visitor(db.Model):
-	visitor_id = db.Column(db.Integer, primary_key = True)
+	id = db.Column(db.Integer, primary_key = True)
 	gender = db.Column(db.Unicode, unique = False)
 	name = db.Column(db.Unicode, unique = False)
 	same_gender = db.Column(db.Boolean, unique = False)
 	university = db.Column(db.Unicode, unique = False)
 	email = db.Column(db.Unicode, unique = False)
+	password = db.Column(db.Unicode, unique = False)
 
-	def __init__(self, gender, name, same_gender, university, email): 
+	def __init__(self, gender, name, same_gender, university, email, password): 
 		self.gender = gender
 		self.name = name 
 		self.same_gender = same_gender
 		self.university = university 
 		self.email = email
+		self.password = bcrypt.generate_password_hash(password, 10).decode('utf8')
 
 class VisitorSchema(ma.Schema):
 	class Meta:
-		fields = ('visitor_id', 'gender', 'name', 'same_gender', 'university', 'email')
+		fields = ('id', 'gender', 'name', 'same_gender', 'university', 'email', 'password')
 
 visitor_schema = VisitorSchema()
 visitors_schema = VisitorSchema(many = True)
+
+# def authenticate(username, password):
+# 	visitor = Visitor.query.filter_by(email=username).first()
+# 	if visitor and bcrypt.check_password_hash(visitor.password, password):
+# 		return visitor
+
+# def identity(payload):
+# 	id = payload['identity']
+# 	return Visitor.query.filter_by(id=id).first()
 
 @app.route("/visitor", methods=["POST"])
 def visitor_add():
@@ -372,16 +399,88 @@ def visitor_add():
 	same_gender = request.json['same_gender']
 	university = request.json['university']
 	email = request.json['email']
+	password = request.json['password']
 
-	new_visitor = Visitor(gender, name, same_gender, university, email)
+	new_visitor = Visitor(gender, name, same_gender, university, email, password)
 	db.session.add(new_visitor)
-	db.session.commit()
-	return visitor_scheme.jsonify(new_visitor)
+	db.session.commit()	
+	identity = {
+		"id": new_visitor.id,
+		"email": new_visitor.email
+	}
+	access_token = create_access_token(identity=identity)
+	return jsonify(access_token=access_token), 200
+	
+@app.route("/visitor/login", methods=["POST"])
+def visitor_login():
+	email = request.json['email']
+	password = request.json['password']
+	visitor = Visitor.query.filter_by(email=email).first()
+
+	if visitor and bcrypt.check_password_hash(visitor.password, password):
+		identity = {
+			"id": visitor.id,
+			"email": visitor.email
+		}
+		access_token = create_access_token(identity=identity)
+		return jsonify(access_token=access_token), 200
+
+	return jsonify({"msg": "Bad username or password"}), 401
+
+@app.route("/visitor/reset", methods=["POST"])
+def visitor_reset():
+	email = request.json['email']
+	visitor = Visitor.query.filter_by(email=email).first()
+
+	if visitor:
+		# Expire token in 60 minutes
+		reset_token = jwt.encode({"id": visitor.id, "exp": int(time.time()) + 60*60}, app.config['JWT_SECRET_KEY'], algorithm='HS256')
+
+		message = Mail(
+			from_email='from_email@example.com',
+			to_emails=email,
+			subject='Password Reset',
+			html_content='http://localhost:3000/visitor/reset?resetToken='+reset_token.decode("utf-8") )
+		try:
+			sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+			response = sg.send(message)
+			print(response.status_code)
+			print(response.body)
+			print(response.headers)
+			return jsonify(), 200
+		except Exception as e:
+			print(e.message)
+			return jsonify(), 500
+	
+	return jsonify({"msg": "Invalid user"}), 401
+
+
+@app.route("/visitor/change-password", methods=["POST"])
+def visitor_change_password():
+	password = request.json['password']
+	reset_token = jwt.decode(request.json['resetToken'], app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+	visitor = Visitor.query.get(reset_token["id"])
+	print(visitor)
+
+	if visitor:
+		visitor.password = bcrypt.generate_password_hash(password, 10).decode('utf8')
+		db.session.commit()
+		return jsonify({"msg": "Updated"}), 200
+	
+	return jsonify({"msg": "Invalid user"}), 401
+
 
 @app.route("/visitor/<visitor_id>", methods=["GET"])
 def visitor_get(visitor_id):
 	visitor = Visitor.query.get(visitor_id)
 	return visitor_schema.jsonify(host)
+
+@app.route('/visitor/data')
+@jwt_required
+def protected():
+	visitor_id = get_jwt_identity()['id']
+	visitor = Visitor.query.get(visitor_id)
+	return visitor_schema.jsonify(visitor)
 
 db.create_all()
 #---------------------------------------------------------------------------------------------------
