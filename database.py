@@ -448,7 +448,8 @@ class Visitor(db.Model):
 	name = db.Column(db.Unicode, unique = False)
 	same_gender = db.Column(db.Boolean, unique = False)
 	university = db.Column(db.Unicode, unique = False)
-	email = db.Column(db.Unicode, unique = False)
+	email = db.Column(db.Unicode, unique = True)
+	password = db.Column(db.Unicode, unique = False)
 
 	def __init__(self, gender, name, same_gender, university, email): 
 		self.gender = gender
@@ -481,6 +482,13 @@ def visitor_add():
 def visitor_get(visitor_id):
 	visitor = Visitor.query.get(visitor_id)
 	return visitor_schema.jsonify(host)
+
+@app.route('/visitor/data')
+@jwt_required
+def protected():
+	visitor_id = get_jwt_identity()['id']
+	visitor = Visitor.query.get(visitor_id)
+	return visitor_schema.jsonify(visitor)
 
 db.create_all()
 #---------------------------------------------------------------------------------------------------
