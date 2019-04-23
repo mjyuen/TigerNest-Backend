@@ -300,19 +300,19 @@ class Pairing(db.Model):
 	same_gender_room = db.Column(db.Boolean, unique=False)
 	host_room_num = db.Column(db.Unicode, unique=False)
 	max_visitors = db.Column(db.Unicode, unique=False)
-	#visitor_list = db.Column(db.JSON, unique=False)
+	visitor_list = db.Column(db.JSON, unique=False)
 	host_first_name = db.Column(db.Unicode, unique=False)
 	host_last_name = db.Column(db.Unicode, unique=False)
 	host_cellphone = db.Column(db.Unicode, unique=False)
 
-	def __init__(self, host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, host_first_name, host_last_name, host_cellphone):
+	def __init__(self, host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, visitor_list, host_first_name, host_last_name, host_cellphone):
 		self.host_id = host_id
 		self.event_id = event_id
 		self.host_gender = host_gender
 		self.same_gender_room = same_gender_room
 		self.host_room_num = host_room_num
 		self.max_visitors = max_visitors
-		#self.visitor_list = visitor_list
+		self.visitor_list = visitor_list
 		self.host_first_name = host_first_name
 		self.host_last_name = host_last_name
 		self.host_cellphone = host_cellphone
@@ -320,8 +320,8 @@ class Pairing(db.Model):
 
 class PairingSchema(ma.Schema):
 	class Meta:
-		#fields = ('pairing_id', 'host_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'visitor_list', 'host_first_name', 'host_last_name', 'host_cellphone')
-		fields = ('pairing_id', 'host_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'host_first_name', 'host_last_name', 'host_cellphone')
+		fields = ('pairing_id', 'host_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'visitor_list', 'host_first_name', 'host_last_name', 'host_cellphone')
+		#fields = ('pairing_id', 'host_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'host_first_name', 'host_last_name', 'host_cellphone')
 
 pairing_schema = PairingSchema()
 pairings_schema = PairingSchema(many = True)
@@ -334,13 +334,13 @@ def pairing_add():
 	same_gender_room = request.json['same_gender_room']
 	host_room_num = request.json['host_room_num']
 	max_visitors = request.json['max_visitors']
-	#visitor_list = request.json['visitor_list']
+	visitor_list = request.json['visitor_list']
 	host_first_name = request.json['host_first_name']
 	host_last_name = request.json['host_last_name']
 	host_cellphone = request.json['host_cellphone']
 
-	#new_pairing = Pairing(host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, visitor_list, host_first_name, host_last_name, host_cellphone)
-	new_pairing = Pairing(host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, host_first_name, host_last_name, host_cellphone)
+	new_pairing = Pairing(host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, visitor_list, host_first_name, host_last_name, host_cellphone)
+	#new_pairing = Pairing(host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, host_first_name, host_last_name, host_cellphone)
 
 	db.session.add(new_pairing)
 	db.session.commit()
