@@ -378,31 +378,33 @@ class VisitorPairing(db.Model):
 	host_id = db.Column(db.Integer, unique=False)
 	event_id = db.Column(db.Integer, unique=False)
 	event_name = db.Column(db.Unicode, unique=False)
+	pairing_id = db.Column(db.Unicode, unique=False)
 
-	def __init__(self, visitor_id, visitor_email, host_id, event_id, event_name):
+	def __init__(self, visitor_id, visitor_email, host_id, event_id, event_name, pairing_id):
 		self.visitor_id = visitor_id
 		self.visitor_email = visitor_email
 		self.host_id = host_id
 		self.event_id = event_id 
 		self.event_name = event_name
+		self.pairing_id = pairing_id
 
 class VisitorPairingSchema(ma.Schema):
 	class Meta:
-		fields=('visitor_pairing_id', 'visitor_id', 'visitor_email', 'host_id', 'event_id', 'event_name')
+		fields=('visitor_pairing_id', 'visitor_id', 'visitor_email', 'host_id', 'event_id', 'event_name', 'pairing_id')
 
 visitor_pairing_schema = VisitorPairingSchema()
 visitor_pairings_schema = VisitorPairingSchema(many = True)
 
 
 @app.route("/visitor_pairing", methods=["POST"])
-@jwt_required
 def visitor_pairing_add():
 	visitor_id = request.json['visitor_id']
 	visitor_email = request.json['visitor_email']
 	host_id = request.json['host_id']
 	event_id = request.json['event_id']
 	event_name = request.json['event_name']
-	new_visitor_pairing = VisitorPairing(visitor_id, visitor_email, host_id, event_id, event_name)
+	pairing_id = request.json['pairing_id']
+	new_visitor_pairing = VisitorPairing(visitor_id, visitor_email, host_id, event_id, event_name, pairing_id)
 	db.session.add(new_visitor_pairing)
 	db.session.commit()
 	return visitor_pairing_schema.jsonify(new_visitor_pairing)
