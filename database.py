@@ -300,17 +300,19 @@ class Pairing(db.Model):
 	same_gender_room = db.Column(db.Boolean, unique=False)
 	host_room_num = db.Column(db.Unicode, unique=False)
 	max_visitors = db.Column(db.Unicode, unique=False)
+	num_visitors = db.Column(db.Integer, unique =False)
 	host_first_name = db.Column(db.Unicode, unique=False)
 	host_last_name = db.Column(db.Unicode, unique=False)
 	host_cellphone = db.Column(db.Unicode, unique=False)
 
-	def __init__(self, host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, host_first_name, host_last_name, host_cellphone):
+	def __init__(self, host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, num_visitors, host_first_name, host_last_name, host_cellphone):
 		self.host_id = host_id
 		self.event_id = event_id
 		self.host_gender = host_gender
 		self.same_gender_room = same_gender_room
 		self.host_room_num = host_room_num
 		self.max_visitors = max_visitors
+		self.num_visitors = num_visitors
 		self.host_first_name = host_first_name
 		self.host_last_name = host_last_name
 		self.host_cellphone = host_cellphone
@@ -318,7 +320,7 @@ class Pairing(db.Model):
 
 class PairingSchema(ma.Schema):
 	class Meta:
-		fields = ('pairing_id', 'host_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'host_first_name', 'host_last_name', 'host_cellphone')
+		fields = ('pairing_id', 'host_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'num_visitors' 'host_first_name', 'host_last_name', 'host_cellphone')
 
 pairing_schema = PairingSchema()
 pairings_schema = PairingSchema(many = True)
@@ -331,11 +333,12 @@ def pairing_add():
 	same_gender_room = request.json['same_gender_room']
 	host_room_num = request.json['host_room_num']
 	max_visitors = request.json['max_visitors']
+	num_visitors = request.json['num_visitors']
 	host_first_name = request.json['host_first_name']
 	host_last_name = request.json['host_last_name']
 	host_cellphone = request.json['host_cellphone']
 
-	new_pairing = Pairing(host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, host_first_name, host_last_name, host_cellphone)
+	new_pairing = Pairing(host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, num_visitors, host_first_name, host_last_name, host_cellphone)
 
 	db.session.add(new_pairing)
 	db.session.commit()
@@ -358,6 +361,19 @@ def pairing_get_host_for_event(event_id):
 	pairings = Pairing.query.filter_by(event_id=event_id).all()
 	return pairings_schema.jsonify(pairings)
 
+@app.route("/pairing/addVisitor/<pairing_id>", methods=["POST"])
+@jwt_required
+def pairing_add_visitor(pairing_id):
+	pairing = Pairing.query.get(pairing_id)
+	pairing.num_visitors = pairing.num_visitors + 1
+	return pairing_schema.jsonify(event)
+
+@app.route("/pairing/removeVisitor/<pairing_id>", methods=["POST"])
+@jwt_required
+def pairing_add_visitor(pairing_id):
+	pairing = Pairing.query.get(pairing_id)
+	pairing.num_visitors = pairing.num_visitors - 1
+	return pairing_schema.jsonify(event)
 
 @app.route("/pairing/delete/<pairing_id>", methods=["DELETE"])
 def pairing_delete(pairing_id):
@@ -372,15 +388,13 @@ class VisitorPairing(db.Model):
 	visitor_email = db.Column(db.Unicode, unique=False)
 	host_id = db.Column(db.Integer, unique=False)
 	event_id = db.Column(db.Integer, unique=False)
-	event_name = db.Column(db.Unicode, unique=False)
 	pairing_id = db.Column(db.Unicode, unique=False)
 
-	def __init__(self, visitor_id, visitor_email, host_id, event_id, event_name, pairing_id):
+	def __init__(self, visitor_id, visitor_email, host_id, event_id, pairing_id):
 		self.visitor_id = visitor_id
 		self.visitor_email = visitor_email
 		self.host_id = host_id
 		self.event_id = event_id 
-		self.event_name = event_name
 		self.pairing_id = pairing_id
 
 class VisitorPairingSchema(ma.Schema):
@@ -392,14 +406,14 @@ visitor_pairings_schema = VisitorPairingSchema(many = True)
 
 
 @app.route("/visitor_pairing", methods=["POST"])
+@jwt_required
 def visitor_pairing_add():
 	visitor_id = request.json['visitor_id']
 	visitor_email = request.json['visitor_email']
 	host_id = request.json['host_id']
 	event_id = request.json['event_id']
-	event_name = request.json['event_name']
 	pairing_id = request.json['pairing_id']
-	new_visitor_pairing = VisitorPairing(visitor_id, visitor_email, host_id, event_id, event_name, pairing_id)
+	new_visitor_pairing = VisitorPairing(visitor_id, visitor_email, host_id, event_id, pairing_id)
 	db.session.add(new_visitor_pairing)
 	db.session.commit()
 	return visitor_pairing_schema.jsonify(new_visitor_pairing)
@@ -411,6 +425,7 @@ def visitor_pairing_delete(visitor_pairing_id):
 
 
 @app.route("/visitor_pairing/guests_in_room/<pairing_id>", methods=["GET"])
+@jwt_required
 def visitor_pairing_get_guests_in_room(pairing_id):
 	count = VisitorPairing.query.filter_by(pairing_id=pairing_id).count()
 	return str(count)
