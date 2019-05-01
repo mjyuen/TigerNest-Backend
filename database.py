@@ -28,8 +28,12 @@ jwt_flask = JWTManager(app)
 
 bcrypt = Bcrypt(app)
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:p@localhost:5432/tigernest"
+#postgres://vhhabiabmrdtya:d2d626af16f4894a2a656de2ca8158f4414687b9b84ea08f801c2c07d774c6b8@ec2-54-243-241-62.compute-1.amazonaws.com:5432/d9d1mlh0cjs2lf
+
+#app.config['SQLALCHEMY_DATABASE_URI'] = "postgres://vhhabiabmrdtya:d2d626af16f4894a2a656de2ca8158f4414687b9b84ea08f801c2c07d774c6b8@ec2-54-243-241-62.compute-1.amazonaws.com:5432/d9d1mlh0cjs2lf"
+
 #app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://localhost/tigernest"
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 #app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 
 heroku = Heroku(app)
@@ -370,7 +374,7 @@ def pairing_add_visitor(pairing_id):
 
 @app.route("/pairing/removeVisitor/<pairing_id>", methods=["POST"])
 @jwt_required
-def pairing_add_visitor(pairing_id):
+def pairing_remove_visitor(pairing_id):
 	pairing = Pairing.query.get(pairing_id)
 	pairing.num_visitors = pairing.num_visitors - 1
 	return pairing_schema.jsonify(event)
@@ -437,17 +441,15 @@ class Eligibilities(db.Model):
 	visitor_email = db.Column(db.Unicode, unique=False)
 	event_id = db.Column(db.Unicode, unique=False)
 	event_name = db.Column(db.Unicode, unique=False)
-	visitor_id = db.Column(db.Unicode, unique=False)
 
-	def __init__(self, visitor_email, event_id, event_name, visitor_id):
+	def __init__(self, visitor_email, event_id, event_name):
 		self.visitor_email = visitor_email
 		self.event_id = event_id
 		self.event_name = event_name
-		self.visitor_id = visitor_id
 
 class EligibilitySchema(ma.Schema):
 	class Meta:
-		fields=('eligibility_id', 'visitor_email', 'event_id', 'event_name', 'visitor_id')
+		fields=('eligibility_id', 'visitor_email', 'event_id', 'event_name')
 
 
 eligibility_schema = EligibilitySchema()
@@ -458,16 +460,15 @@ def eligibility_add():
 	visitor_email = request.json['visitor_email']
 	event_id = request.json['event_id']
 	event_name = request.json['event_name']
-	visitor_id = request.json['visitor_id']
-	new_eligibility = Eligibilities(visitor_email, event_id, event_name, visitor_id)
+	new_eligibility = Eligibilities(visitor_email, event_id, event_name)
 	db.session.add(new_eligibility)
 	db.session.commit()
 	return eligibility_schema.jsonify(new_eligibility)
 
-@app.route("/eligibility/events_for_visitor/<visitor_id>", methods=["GET"])
-@jwt_required
-def eligibility_events_for_visitor(visitor_id):
-	eligibilities = Eligibilities.query.filter_by(visitor_id=visitor_id).all()
+
+@app.route("/eligibility/events_for_visitor/<visitor_email>", methods=["GET"])
+def eligibility_events_for_visitor(visitor_email):
+	eligibilities = Eligibilities.query.filter_by(visitor_email=visitor_email).all()
 	return eligibilities_schema.jsonify(eligibilities)
 
 
