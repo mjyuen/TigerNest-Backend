@@ -434,6 +434,16 @@ def visitor_pairing_get_guests_in_room(pairing_id):
 	count = VisitorPairing.query.filter_by(pairing_id=pairing_id).count()
 	return str(count)
 
+@app.route("/visitor_pairing/pairings_for_event/<event_id>", methods=["GET"])
+def visitor_pairing_get_for_events(event_id):
+	visitor_pairings = VisitorPairing.query.get(event_id=event_id).all()
+	return visitor_pairings_schema.jsonify(visitor_pairings)
+
+@app.route("/visitor_pairing/all_hosts/<pairing_id>", methods=["GET"])
+def visitor_pairing_get_hosts(pairing_id):
+	visitor_pairings = VisitorPairing.query.filter_by(pairing_id=pairing_id).all()
+	return visitor_pairings_schema.jsonify(visitor_pairings)
+
 
 #-----------------------------------------------------------------------------------------------------------------------------------------
 class Eligibilities(db.Model):
@@ -587,7 +597,7 @@ def visitor_change_password():
 @app.route("/visitor/<visitor_id>", methods=["GET"])
 def visitor_get(visitor_id):
 	visitor = Visitor.query.get(visitor_id)
-	return visitor_schema.jsonify(host)
+	return visitor_schema.jsonify(visitor)
 
 @app.route('/visitor/data')
 @jwt_required
