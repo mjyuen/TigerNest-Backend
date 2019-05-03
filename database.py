@@ -326,7 +326,7 @@ class Pairing(db.Model):
 	host_gender = db.Column(db.Unicode, unique=False)
 	same_gender_room = db.Column(db.Boolean, unique=False)
 	host_room_num = db.Column(db.Unicode, unique=False)
-	max_visitors = db.Column(db.Unicode, unique=False)
+	max_visitors = db.Column(db.Integer, unique=False)
 	num_visitors = db.Column(db.Integer, unique =False)
 	host_first_name = db.Column(db.Unicode, unique=False)
 	host_last_name = db.Column(db.Unicode, unique=False)
@@ -359,7 +359,7 @@ def pairing_add():
 	host_gender = request.json['host_gender']
 	same_gender_room = request.json['same_gender_room']
 	host_room_num = request.json['host_room_num']
-	max_visitors = request.json['max_visitors']
+	max_visitors = int(request.json['max_visitors'])
 	num_visitors = 0
 	host_first_name = request.json['host_first_name']
 	host_last_name = request.json['host_last_name']
@@ -428,20 +428,18 @@ class VisitorPairing(db.Model):
 	visitor_pairing_id = db.Column(db.Integer, primary_key = True)
 	visitor_id = db.Column(db.Integer, unique=False)
 	visitor_email = db.Column(db.Unicode, unique=False)
-	host_id = db.Column(db.Integer, unique=False)
 	event_id = db.Column(db.Integer, unique=False)
 	pairing_id = db.Column(db.Unicode, unique=False)
 
-	def __init__(self, visitor_id, visitor_email, host_id, event_id, pairing_id):
+	def __init__(self, visitor_id, visitor_email, event_id, pairing_id):
 		self.visitor_id = visitor_id
 		self.visitor_email = visitor_email
-		self.host_id = host_id
 		self.event_id = event_id 
 		self.pairing_id = pairing_id
 
 class VisitorPairingSchema(ma.Schema):
 	class Meta:
-		fields=('visitor_pairing_id', 'visitor_id', 'visitor_email', 'host_id', 'event_id', 'event_name', 'pairing_id')
+		fields=('visitor_pairing_id', 'visitor_id', 'visitor_email', 'event_id', 'event_name', 'pairing_id')
 
 visitor_pairing_schema = VisitorPairingSchema()
 visitor_pairings_schema = VisitorPairingSchema(many = True)
@@ -452,10 +450,9 @@ visitor_pairings_schema = VisitorPairingSchema(many = True)
 def visitor_pairing_add():
 	visitor_id = request.json['visitor_id']
 	visitor_email = request.json['visitor_email']
-	host_id = request.json['host_id']
 	event_id = request.json['event_id']
 	pairing_id = request.json['pairing_id']
-	new_visitor_pairing = VisitorPairing(visitor_id, visitor_email, host_id, event_id, pairing_id)
+	new_visitor_pairing = VisitorPairing(visitor_id, visitor_email, event_id, pairing_id)
 	db.session.add(new_visitor_pairing)
 	db.session.commit()
 	return visitor_pairing_schema.jsonify(new_visitor_pairing)
