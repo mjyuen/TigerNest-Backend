@@ -461,6 +461,8 @@ def visitor_pairing_add():
 @app.route("/visitor_pairing/delete/<visitor_pairing_id>", methods=["DELETE"])
 def visitor_pairing_delete(visitor_pairing_id):
 	visitor_pairing = VisitorPairing.query.get(visitor_pairing_id)
+	db.session.delete(visitor_pairing)
+	db.session.commit()
 	return visitor_pairing_shema.jsonify(visitor_pairing)
 
 
