@@ -348,7 +348,7 @@ class Pairing(db.Model):
 
 class PairingSchema(ma.Schema):
 	class Meta:
-		fields = ('pairing_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'num_visitors' 'host_first_name', 'host_last_name', 'host_cellphone', 'host_netid')
+		fields = ('pairing_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'num_visitors', 'host_first_name', 'host_last_name', 'host_cellphone', 'host_netid')
 
 pairing_schema = PairingSchema()
 pairings_schema = PairingSchema(many = True)
