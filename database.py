@@ -322,7 +322,6 @@ visitorpairings_schema = VisitorPairingSchema(many = True)"""
 #-----------------------------------------------------------------------------------------------------------------------------------------
 class Pairing(db.Model):
 	pairing_id = db.Column(db.Integer, primary_key=True)
-	host_id = db.Column(db.Integer, unique=False)
 	event_id = db.Column(db.Integer, unique=False)
 	host_gender = db.Column(db.Unicode, unique=False)
 	same_gender_room = db.Column(db.Boolean, unique=False)
@@ -334,8 +333,7 @@ class Pairing(db.Model):
 	host_cellphone = db.Column(db.Unicode, unique=False)
 	host_netid = db.Column(db.Unicode, unique=False)
 
-	def __init__(self, host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, num_visitors, host_first_name, host_last_name, host_cellphone, host_netid):
-		self.host_id = host_id
+	def __init__(self, event_id, host_gender, same_gender_room, host_room_num, max_visitors, num_visitors, host_first_name, host_last_name, host_cellphone, host_netid):
 		self.event_id = event_id
 		self.host_gender = host_gender
 		self.same_gender_room = same_gender_room
@@ -350,14 +348,13 @@ class Pairing(db.Model):
 
 class PairingSchema(ma.Schema):
 	class Meta:
-		fields = ('pairing_id', 'host_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'num_visitors' 'host_first_name', 'host_last_name', 'host_cellphone', 'host_netid')
+		fields = ('pairing_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'num_visitors' 'host_first_name', 'host_last_name', 'host_cellphone', 'host_netid')
 
 pairing_schema = PairingSchema()
 pairings_schema = PairingSchema(many = True)
 
 @app.route("/pairing", methods=["POST"])
 def pairing_add():
-	host_id = request.json['host_id']
 	event_id = request.json['event_id']
 	host_gender = request.json['host_gender']
 	same_gender_room = request.json['same_gender_room']
@@ -370,7 +367,7 @@ def pairing_add():
 	host_netid = request.json['host_netid']
 
 
-	new_pairing = Pairing(host_id, event_id, host_gender, same_gender_room, host_room_num, max_visitors, num_visitors, host_first_name, host_last_name, host_cellphone, host_netid)
+	new_pairing = Pairing(event_id, host_gender, same_gender_room, host_room_num, max_visitors, num_visitors, host_first_name, host_last_name, host_cellphone, host_netid)
 
 	db.session.add(new_pairing)
 	db.session.commit()
