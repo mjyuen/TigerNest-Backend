@@ -429,7 +429,8 @@ class VisitorPairing(db.Model):
 	visitor_id = db.Column(db.Integer, unique=False)
 	visitor_email = db.Column(db.Unicode, unique=False)
 	event_id = db.Column(db.Integer, unique=False)
-	pairing_id = db.Column(db.Unicode, unique=False)
+	pairing_id = db.Column(db.Integer, unique=False)
+
 
 	def __init__(self, visitor_id, visitor_email, event_id, pairing_id):
 		self.visitor_id = visitor_id
@@ -439,7 +440,7 @@ class VisitorPairing(db.Model):
 
 class VisitorPairingSchema(ma.Schema):
 	class Meta:
-		fields=('visitor_pairing_id', 'visitor_id', 'visitor_email', 'event_id', 'event_name', 'pairing_id')
+		fields=('visitor_pairing_id', 'visitor_id', 'visitor_email', 'event_id', 'pairing_id')
 
 visitor_pairing_schema = VisitorPairingSchema()
 visitor_pairings_schema = VisitorPairingSchema(many = True)
@@ -451,7 +452,7 @@ def visitor_pairing_add():
 	visitor_id = request.json['visitor_id']
 	visitor_email = request.json['visitor_email']
 	event_id = request.json['event_id']
-	pairing_id = request.json['pairing_id']
+	pairing_id = int(request.json['pairing_id'])
 	new_visitor_pairing = VisitorPairing(visitor_id, visitor_email, event_id, pairing_id)
 	db.session.add(new_visitor_pairing)
 	db.session.commit()
