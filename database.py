@@ -489,15 +489,17 @@ class Eligibilities(db.Model):
 	visitor_email = db.Column(db.Unicode, unique=False)
 	event_id = db.Column(db.Unicode, unique=False)
 	event_name = db.Column(db.Unicode, unique=False)
+	signed_up = db.Column(db.Boolean, unique=False)
 
-	def __init__(self, visitor_email, event_id, event_name):
+	def __init__(self, visitor_email, event_id, event_name, signed_up):
 		self.visitor_email = visitor_email
 		self.event_id = event_id
 		self.event_name = event_name
+		self.signed_up = signed_up
 
 class EligibilitySchema(ma.Schema):
 	class Meta:
-		fields=('eligibility_id', 'visitor_email', 'event_id', 'event_name')
+		fields=('eligibility_id', 'visitor_email', 'event_id', 'event_name', 'signed_up')
 
 
 eligibility_schema = EligibilitySchema()
@@ -508,7 +510,8 @@ def eligibility_add():
 	visitor_email = request.json['visitor_email']
 	event_id = request.json['event_id']
 	event_name = request.json['event_name']
-	new_eligibility = Eligibilities(visitor_email, event_id, event_name)
+	signed_up = False
+	new_eligibility = Eligibilities(visitor_email, event_id, event_name, signed_up)
 	db.session.add(new_eligibility)
 	db.session.commit()
 	return eligibility_schema.jsonify(new_eligibility)
@@ -516,6 +519,12 @@ def eligibility_add():
 @app.route("/eligibility/<eligibility_id>", methods=["GET"])
 def eligibility_get(eligibility_id):
 	eligibility = Eligibilities.query.get(eligibility_id)
+	return eligibility_schema.jsonify(eligibility)
+
+@app.route("/eligibility/visitor_signup/<eligibility_id>", methods=["POST"])
+def eligibility_visitor_signup(eligibility_id):
+	eligibility = Eligibilities.query.get(eligibility_id)
+	eligibility.signed_up = True
 	return eligibility_schema.jsonify(eligibility)
 
 
