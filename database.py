@@ -40,7 +40,6 @@ heroku = Heroku(app)
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
-
 @app.route("/getRegCode", methods = ["GET"])
 def get_code():
 	result = {"regCode": "2sdi319230d8208sd"}
@@ -124,8 +123,10 @@ class Event(db.Model):
 	hosts = db.Column(db.JSON, unique = False)
 	hosting_organization = db.Column(db.Unicode, unique=False)
 	organizer_id = db.Column(db.Unicode, unique=False)
+	organizer_netid = db.Column(db.Unicode, unique=False)
+	event_stage = db.Column(db.Integer, unique=False)
 
-	def __init__(self, name, start_date, end_date, location, expected_number_visitors, number_of_hosts, hosts, start_time, end_time, description, hosting_organization, organizer_id):
+	def __init__(self, name, start_date, end_date, location, expected_number_visitors, number_of_hosts, hosts, start_time, end_time, description, hosting_organization, organizer_netid, organizer_id, event_stage):
 		self.name = name
 		self.start_date = start_date
 		self.end_date = end_date
@@ -138,10 +139,12 @@ class Event(db.Model):
 		self.description = description
 		self.hosting_organization = hosting_organization
 		self.organizer_id = organizer_id
+		self.organizer_netid = organizer_netid
+		self.event_stage = event_stage
 
 class EventSchema(ma.Schema):
 	class Meta:
-		fields = ('event_id', 'name', 'start_date', 'end_date', 'location', 'expected_number_visitors', 'number_of_hosts', 'hosts', 'start_time', 'end_time', 'description', 'hosting_organization', 'organizer_id')
+		fields = ('event_id', 'name', 'start_date', 'end_date', 'location', 'expected_number_visitors', 'number_of_hosts', 'hosts', 'start_time', 'end_time', 'description', 'hosting_organization', 'organizer_netid', 'organizer_id', 'event_stage')
 
 event_schema = EventSchema()
 events_schema = EventSchema(many = True)
@@ -159,9 +162,11 @@ def event_add():
 	end_time = request.json['end_time']
 	description = request.json['description']
 	hosting_organization = request.json['hosting_organization']
+	organizer_netid = request.json['organizer_netid']
 	organizer_id = request.json['organizer_id']
+	event_stage = 0
 
-	new_event = Event(name, start_date, end_date, location, expected_number_visitors, number_of_hosts, hosts, start_time, end_time, description, hosting_organization, organizer_id)
+	new_event = Event(name, start_date, end_date, location, expected_number_visitors, number_of_hosts, hosts, start_time, end_time, description, hosting_organization, organizer_netid, organizer_id, event_stage)
 	db.session.add(new_event)
 	db.session.commit()
 	return event_schema.jsonify(new_event)
@@ -181,10 +186,27 @@ def event_update_info(event_id):
 	event.end_time = request.json['end_time']
 	event.description = request.json['description']
 	event.hosting_organization = request.json['hosting_organization']
-	event.organizer_id = request.json['organizer_id']
+	#event.organizer_id = request.json['organizer_id']
 
 	db.session.commit()
 	return event_schema.jsonify(event)
+
+@app.route("/event/stage/visitor_signup/<event_id>", methods=["POST"])
+def event_update_stage_visitor_signup(event_id):
+	event = Event.query.get(event_id)
+	event.event_stage = 1;
+
+	db.session.commit()
+	return event_schema.jsonify(event)
+
+@app.route("/event/stage/close_signup/<event_id>", methods=["POST"])
+def event_update_stage_close_signup(event_id):
+	event = Event.query.get(event_id)
+	event.event_stage = 2;
+
+	db.session.commit()
+	return event_schema.jsonify(event)
+
 
 @app.route("/event/<event_id>", methods=["GET"])
 def event_get(event_id):
@@ -210,10 +232,14 @@ def event_most_recent():
 	return events_schema.jsonify(result)
 
 @app.route("/event/organizersEvents/<organizer_id>", methods=["GET"])
-def event_get_organizers_events():
+def event_get_organizers_events(organizer_id):
 	result = Event.query.filter_by(organizer_id=organizer_id)
 	return events_schema.jsonify(result)
 
+@app.route("/event/organizersEvents/netid/<organizer_netid>", methods=["GET"])
+def event_get_organizers_events_netid(organizer_netid):
+	result = Event.query.filter_by(organizer_netid=organizer_netid).order_by(Event.start_date).all()
+	return events_schema.jsonify(result)
 
 @app.route("/event/delete/<event_id>", methods=["DELETE"])
 def event_delete(event_id):
@@ -221,8 +247,6 @@ def event_delete(event_id):
 	db.session.delete(event)
 	db.session.commit()
 	return event_schema.jsonify(event)
-
-
 
 
 #------------------------------------------------------------------------------------------
@@ -355,8 +379,8 @@ def pairing_get(pairing_id):
 
 
 @app.route("/pairing/events_for_host/<host_id>", methods=["GET"])
-def pairing_get_event_for_host(host_id):
-	pairings = Pairing.query.filter_by(host_id=host_id).all()
+def pairing_get_event_for_host(host_netid):
+	pairings = Pairing.query.filter_by(host_netid=host_netid).all()
 	return pairings_schema.jsonify(pairings)
 
 @app.route("/pairing/hosts_for_event/<event_id>", methods=["GET"])
@@ -384,6 +408,19 @@ def pairing_delete(pairing_id):
 	pairing = Pairing.query.get(pairing_id)
 	return pairing_shema.jsonify(pairing)
 
+@app.route("/pairing/update/<pairing_id>", methods=["POST"])
+def pairing_update(pairing_id):
+	pairing = Pairing.query.get(pairing_id)
+	pairing.host_gender = request.json['host_gender']
+	pairing.same_gender_room = request.json['same_gender_room']
+	pairing.host_room_num = request.json['host_room_num']
+	pairing.max_visitors = request.json['max_visitors']
+	pairing.host_first_name = request.json['host_first_name']
+	pairing.host_last_name = request.json['host_last_name']
+	pairing.host_cellphone = request.json['host_cellphone']
+
+	db.session.commit()
+	return pairing_schema.jsonify(pairing)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------
 class VisitorPairing(db.Model):
@@ -474,6 +511,11 @@ def eligibility_add():
 	db.session.add(new_eligibility)
 	db.session.commit()
 	return eligibility_schema.jsonify(new_eligibility)
+
+@app.route("/eligibility/<eligibility_id>", methods=["GET"])
+def eligibility_get(eligibility_id):
+	eligibility = Eligibilities.query.get(eligibility_id)
+	return eligibility_schema.jsonify(eligibility)
 
 
 @app.route("/eligibility/events_for_visitor/<visitor_email>", methods=["GET"])
