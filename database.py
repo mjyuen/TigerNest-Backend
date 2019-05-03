@@ -563,7 +563,11 @@ visitors_schema = VisitorSchema(many = True)
 def visitor_add():
 	gender = request.json['gender']
 	name = request.json['name']
-	same_gender = request.json['same_gender']
+	gender_same = request.json['same_gender']
+
+	same_gender = False
+	if (gender_same == "True"):
+		same_gender = True
 	university = request.json['university']
 	email = request.json['email']
 	password = request.json['password']
