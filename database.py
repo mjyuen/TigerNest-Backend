@@ -395,14 +395,14 @@ def pairing_get_host_for_event(event_id):
 def pairing_add_visitor(pairing_id):
 	pairing = Pairing.query.get(pairing_id)
 	pairing.num_visitors = pairing.num_visitors + 1
-	return pairing_schema.jsonify(event)
+	return pairing_schema.jsonify(pairing)
 
 @app.route("/pairing/removeVisitor/<pairing_id>", methods=["POST"])
 @jwt_required
 def pairing_remove_visitor(pairing_id):
 	pairing = Pairing.query.get(pairing_id)
 	pairing.num_visitors = pairing.num_visitors - 1
-	return pairing_schema.jsonify(event)
+	return pairing_schema.jsonify(pairing)
 
 @app.route("/pairing/delete/<pairing_id>", methods=["DELETE"])
 def pairing_delete(pairing_id):
