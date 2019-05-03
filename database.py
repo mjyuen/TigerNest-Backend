@@ -360,7 +360,7 @@ def pairing_add():
 	same_gender_room = request.json['same_gender_room']
 	host_room_num = request.json['host_room_num']
 	max_visitors = request.json['max_visitors']
-	num_visitors = request.json['num_visitors']
+	num_visitors = 0
 	host_first_name = request.json['host_first_name']
 	host_last_name = request.json['host_last_name']
 	host_cellphone = request.json['host_cellphone']
@@ -474,7 +474,7 @@ def visitor_pairing_get_guests_in_room(pairing_id):
 
 @app.route("/visitor_pairing/pairings_for_event/<event_id>", methods=["GET"])
 def visitor_pairing_get_for_events(event_id):
-	visitor_pairings = VisitorPairing.query.get(event_id=event_id).all()
+	visitor_pairings = VisitorPairing.query.filter_by(event_id=event_id).all()
 	return visitor_pairings_schema.jsonify(visitor_pairings)
 
 @app.route("/visitor_pairing/all_hosts/<pairing_id>", methods=["GET"])
