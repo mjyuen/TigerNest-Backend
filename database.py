@@ -378,7 +378,7 @@ def pairing_get(pairing_id):
 	return pairing_schema.jsonify(pairing)
 
 
-@app.route("/pairing/events_for_host/<host_id>", methods=["GET"])
+@app.route("/pairing/events_for_host/<host_netid>", methods=["GET"])
 def pairing_get_event_for_host(host_netid):
 	pairings = Pairing.query.filter_by(host_netid=host_netid).all()
 	return pairings_schema.jsonify(pairings)
