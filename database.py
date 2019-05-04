@@ -217,6 +217,7 @@ def event_get(event_id):
 def event_add_host(event_id):
 	event = Event.query.get(event_id)
 	event.number_of_hosts = event.number_of_hosts + 1
+	db.session.commit()
 	return event_schema.jsonify(event)
 
 @app.route("/event/sort_date", methods=["GET"])
@@ -395,6 +396,7 @@ def pairing_get_host_for_event(event_id):
 def pairing_add_visitor(pairing_id):
 	pairing = Pairing.query.get(pairing_id)
 	pairing.num_visitors = pairing.num_visitors + 1
+	db.session.commit()
 	return pairing_schema.jsonify(pairing)
 
 @app.route("/pairing/removeVisitor/<pairing_id>", methods=["POST"])
@@ -402,11 +404,14 @@ def pairing_add_visitor(pairing_id):
 def pairing_remove_visitor(pairing_id):
 	pairing = Pairing.query.get(pairing_id)
 	pairing.num_visitors = pairing.num_visitors - 1
+	db.session.commit()
 	return pairing_schema.jsonify(pairing)
 
 @app.route("/pairing/delete/<pairing_id>", methods=["DELETE"])
 def pairing_delete(pairing_id):
 	pairing = Pairing.query.get(pairing_id)
+	db.session.delete(pairing)
+	db.session.commit()
 	return pairing_shema.jsonify(pairing)
 
 @app.route("/pairing/update/<pairing_id>", methods=["POST"])
@@ -525,6 +530,7 @@ def eligibility_get(eligibility_id):
 def eligibility_visitor_signup(eligibility_id):
 	eligibility = Eligibilities.query.get(eligibility_id)
 	eligibility.signed_up = True
+	db.session.commit()
 	return eligibility_schema.jsonify(eligibility)
 
 
