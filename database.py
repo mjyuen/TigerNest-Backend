@@ -468,7 +468,7 @@ def visitor_pairing_delete(visitor_pairing_id):
 	visitor_pairing = VisitorPairing.query.get(visitor_pairing_id)
 	db.session.delete(visitor_pairing)
 	db.session.commit()
-	return visitor_pairing_shema.jsonify(visitor_pairing)
+	return visitor_pairing_schema.jsonify(visitor_pairing)
 
 
 @app.route("/visitor_pairing/guests_in_room/<pairing_id>", methods=["GET"])
