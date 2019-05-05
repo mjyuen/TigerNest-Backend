@@ -487,6 +487,11 @@ def visitor_pairing_get_hosts(pairing_id):
 	visitor_pairings = VisitorPairing.query.filter_by(pairing_id=pairing_id).all()
 	return visitor_pairings_schema.jsonify(visitor_pairings)
 
+@app.route("/visitor_pairing/filter_eligibilities/<event_id>/<visitor_id>", methods=["GET"])
+def visitor_pairing_filter_eligibilities(event_id, visitor_id):
+	visitor_pairing = VisitorPairing.query.filter_by(event_id=event_id, visitor_id=visitor_id).first()
+	return visitor_pairing_schema.jsonify(visitor_pairing)
+
 
 #-----------------------------------------------------------------------------------------------------------------------------------------
 class Eligibilities(db.Model):
@@ -530,6 +535,13 @@ def eligibility_get(eligibility_id):
 def eligibility_visitor_signup(eligibility_id):
 	eligibility = Eligibilities.query.get(eligibility_id)
 	eligibility.signed_up = True
+	db.session.commit()
+	return eligibility_schema.jsonify(eligibility)
+
+@app.route("/eligibility/visitor_signup_not/<eligibility_id>", methods=["POST"])
+def eligibility_visitor_not_signup(eligibility_id):
+	eligibility = Eligibilities.query.get(eligibility_id)
+	eligibility.signed_up = False
 	db.session.commit()
 	return eligibility_schema.jsonify(eligibility)
 
