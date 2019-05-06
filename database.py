@@ -640,7 +640,7 @@ def visitor_reset():
 			from_email='from_email@example.com',
 			to_emails=email,
 			subject='Password Reset',
-			html_content='https://tigernest-backend.herokuapp.com/visitor/reset?resetToken='+reset_token.decode("utf-8") )
+			html_content='https://tiger-nest.herokuapp.com/visitor/reset?resetToken='+reset_token.decode("utf-8") )
 		try:
 			sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
 			response = sg.send(message)
