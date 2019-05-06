@@ -412,7 +412,7 @@ def pairing_delete(pairing_id):
 	pairing = Pairing.query.get(pairing_id)
 	db.session.delete(pairing)
 	db.session.commit()
-	return pairing_shema.jsonify(pairing)
+	return pairing_schema.jsonify(pairing)
 
 @app.route("/pairing/update/<pairing_id>", methods=["POST"])
 def pairing_update(pairing_id):
@@ -469,7 +469,6 @@ def visitor_pairing_delete(visitor_pairing_id):
 	db.session.delete(visitor_pairing)
 	db.session.commit()
 	return visitor_pairing_schema.jsonify(visitor_pairing)
-
 
 @app.route("/visitor_pairing/guests_in_room/<pairing_id>", methods=["GET"])
 @jwt_required
