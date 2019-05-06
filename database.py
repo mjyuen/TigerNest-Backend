@@ -333,8 +333,9 @@ class Pairing(db.Model):
 	host_last_name = db.Column(db.Unicode, unique=False)
 	host_cellphone = db.Column(db.Unicode, unique=False)
 	host_netid = db.Column(db.Unicode, unique=False)
+	event_name = db.Column(db.Unicode, unique=False)
 
-	def __init__(self, event_id, host_gender, same_gender_room, host_room_num, max_visitors, num_visitors, host_first_name, host_last_name, host_cellphone, host_netid):
+	def __init__(self, event_id, host_gender, same_gender_room, host_room_num, max_visitors, num_visitors, host_first_name, host_last_name, host_cellphone, host_netid, event_name):
 		self.event_id = event_id
 		self.host_gender = host_gender
 		self.same_gender_room = same_gender_room
@@ -345,11 +346,12 @@ class Pairing(db.Model):
 		self.host_last_name = host_last_name
 		self.host_cellphone = host_cellphone
 		self.host_netid = host_netid
+		self.event_name = event_name
 
 
 class PairingSchema(ma.Schema):
 	class Meta:
-		fields = ('pairing_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'num_visitors', 'host_first_name', 'host_last_name', 'host_cellphone', 'host_netid')
+		fields = ('pairing_id', 'event_id', 'host_gender', 'same_gender_room', 'host_room_num', 'max_visitors', 'num_visitors', 'host_first_name', 'host_last_name', 'host_cellphone', 'host_netid', 'event_name')
 
 pairing_schema = PairingSchema()
 pairings_schema = PairingSchema(many = True)
@@ -366,9 +368,10 @@ def pairing_add():
 	host_last_name = request.json['host_last_name']
 	host_cellphone = request.json['host_cellphone']
 	host_netid = request.json['host_netid']
+	event_name = request.json['event_name']
 
 
-	new_pairing = Pairing(event_id, host_gender, same_gender_room, host_room_num, max_visitors, num_visitors, host_first_name, host_last_name, host_cellphone, host_netid)
+	new_pairing = Pairing(event_id, host_gender, same_gender_room, host_room_num, max_visitors, num_visitors, host_first_name, host_last_name, host_cellphone, host_netid, event_name)
 
 	db.session.add(new_pairing)
 	db.session.commit()
