@@ -420,7 +420,8 @@ def pairing_delete(pairing_id):
 @app.route("/pairing/delete_events/<event_id>", methods=["DELETE"])
 def pairing_delete_events(event_id):
 	pairings = Pairing.query.filter_by(event_id=event_id).all()
-	db.session.delete(pairings)
+	for i in pairings:
+		db.session.delete(i)
 	db.session.commit()
 	return pairings_schema.jsonify(pairings)
 
@@ -484,7 +485,9 @@ def visitor_pairing_delete(visitor_pairing_id):
 @app.route("/visitor_pairing/delete_events/<event_id>", methods=["DELETE"])
 def visitor_pairing_delete_events(event_id):
 	visitor_pairings = VisitorPairing.query.filter_by(event_id=event_id).all()
-	db.session.delete(visitor_pairings)
+	#db.session.delete(visitor_pairings)
+	for i in visitor_pairings:
+		db.session.delete(i)
 	db.session.commit()
 	return visitor_pairings_schema.jsonify(visitor_pairings)
 
@@ -565,7 +568,8 @@ def eligibility_visitor_not_signup(eligibility_id):
 @app.route("/eligibility/delete_events/<event_id>", methods=["DELETE"])
 def eligibility_delete_events(event_id):
 	eligibilities = Eligibilities.query.filter_by(event_id=event_id).all()
-	db.session.delete(eligibilities)
+	for i in eligibilities:
+		db.session.delete(i)
 	db.session.commit()
 	return eligibilities_schema.jsonify(eligibilities)
 
