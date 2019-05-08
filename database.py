@@ -417,6 +417,13 @@ def pairing_delete(pairing_id):
 	db.session.commit()
 	return pairing_schema.jsonify(pairing)
 
+@app.route("/pairing/delete_events/<event_id>", methods=["DELETE"])
+def pairing_delete_events(event_id):
+	pairings = Pairing.query.filter_by(event_id=event_id).all()
+	db.session.delete(pairings)
+	db.session.commit()
+	return pairings_schema.jsonify(pairings)
+
 @app.route("/pairing/update/<pairing_id>", methods=["POST"])
 def pairing_update(pairing_id):
 	pairing = Pairing.query.get(pairing_id)
@@ -472,6 +479,14 @@ def visitor_pairing_delete(visitor_pairing_id):
 	db.session.delete(visitor_pairing)
 	db.session.commit()
 	return visitor_pairing_schema.jsonify(visitor_pairing)
+
+
+@app.route("/visitor_pairing/delete_events/<event_id>", methods=["DELETE"])
+def visitor_pairing_delete_events(event_id):
+	visitor_pairings = VisitorPairing.query.filter_by(event_id=event_id).all()
+	db.session.delete(visitor_pairings)
+	db.session.commit()
+	return visitor_pairings_schema.jsonify(visitor_pairings)
 
 @app.route("/visitor_pairing/guests_in_room/<pairing_id>", methods=["GET"])
 @jwt_required
@@ -546,6 +561,13 @@ def eligibility_visitor_not_signup(eligibility_id):
 	eligibility.signed_up = False
 	db.session.commit()
 	return eligibility_schema.jsonify(eligibility)
+
+@app.route("/eligibility/delete_events/<event_id>", methods=["DELETE"])
+def eligibility_delete_events(event_id):
+	eligibilities = Eligibilities.query.filter_by(event_id=event_id).all()
+	db.session.delete(eligibilities)
+	db.session.commit()
+	return eligibilities_schema.jsonify(eligibilities)
 
 
 @app.route("/eligibility/events_for_visitor/<visitor_email>", methods=["GET"])
