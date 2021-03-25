@@ -36,7 +36,7 @@ PyJWT==1.7.1
 python-dateutil==2.8.0
 python-http-client==3.1.0
 pytz==2018.7
-PyYAML==3.13
+PyYAML==5.4
 redis==3.0.1
 requests==2.21.0
 rsa==3.4.2
