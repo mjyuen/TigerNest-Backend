@@ -46,6 +46,6 @@ six==1.12.0
 SQLAlchemy==1.2.15
 stripe==2.16.0
 -e git+https://github.com/TigerMeals/Delivery.git@3f33fcca35bd968e08cc3070a0a3cf7bca82dcbe#egg=tigermeals
-urllib3==1.24.1
+urllib3==1.26.5
 Werkzeug==0.14.1
 xmltodict==0.11.0
