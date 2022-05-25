@@ -32,7 +32,7 @@ pbr==5.1.1
 psycopg2==2.7.6.1
 pyasn1==0.4.5
 pycparser==2.19
-PyJWT==1.7.1
+PyJWT==2.4.0
 python-dateutil==2.8.0
 python-http-client==3.1.0
 pytz==2018.7
